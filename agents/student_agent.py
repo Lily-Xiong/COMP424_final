@@ -63,7 +63,7 @@ class MonteCarloSearchTree():
         return
 
 
-class TreeNode():
+class TreeNode:
     def __init__(self, move, parentNode=None):
         self.parent = parentNode
         self.children = []
