@@ -87,7 +87,7 @@ class MonteCarloSearchTree():
         self.rootNode = rootNode
 
 
-
+#Class representing one node in the Monte Carlo Search Tree
 class TreeNode:
     def __init__(self, chessboard, my_pos, adv_pos, parentNode=None):
         self.parent = parentNode
@@ -112,7 +112,8 @@ class TreeNode:
         parent_node = self
         new_pos = getNextPossibleMove(chess_board, self.pos, adv_pos, )
         new_node = TreeNode(parent_node, )
-
+    
+    #Simulate one game from a given node
     def simulation(self, max_step, we_first_or_second):
         # returns the final board after the game has ended
         # if we_first_or_second = 1 we play first
@@ -131,6 +132,7 @@ class TreeNode:
 
         return end_state
     
+    #Backpropagate on the nodes based on the result of simulation
     def backpropagation(self, gameResult):
         currentNode = self
         while (currentNode != None):
