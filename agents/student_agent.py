@@ -24,6 +24,8 @@ class StudentAgent(Agent):
             "d": 2,
             "l": 3,
         }
+        self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+        self.autoplay = True
 
     def step(self, chess_board, my_pos, adv_pos, max_step):
         """
@@ -42,6 +44,42 @@ class StudentAgent(Agent):
         """
         # dummy return
         return my_pos, self.dir_map["u"]
+
+    def random_move(self, chess_board, my_pos, adv_pos, max_step):
+        # Moves (Up, Right, Down, Left)
+        ori_pos = deepcopy(my_pos)
+        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+        steps = np.random.randint(0, max_step + 1)
+
+        # Random Walk
+        for _ in range(steps):
+            r, c = my_pos
+            dir = np.random.randint(0, 4)
+            m_r, m_c = moves[dir]
+            my_pos = (r + m_r, c + m_c)
+
+            # Special Case enclosed by Adversary
+            k = 0
+            while chess_board[r, c, dir] or my_pos == adv_pos:
+                k += 1
+                if k > 300:
+                    break
+                dir = np.random.randint(0, 4)
+                m_r, m_c = moves[dir]
+                my_pos = (r + m_r, c + m_c)
+
+            if k > 300:
+                my_pos = ori_pos
+                break
+
+        # Put Barrier
+        dir = np.random.randint(0, 4)
+        r, c = my_pos
+        while chess_board[r, c, dir]:
+            dir = np.random.randint(0, 4)
+
+        return my_pos, dir
+
 
 
 class MonteCarloSearchTree():
@@ -64,12 +102,14 @@ class MonteCarloSearchTree():
 
 
 class TreeNode:
-    def __init__(self, move, parentNode=None):
+    def __init__(self, move, chessboard, parentNode=None):
         self.parent = parentNode
         self.children = []
         self.num_of_visit = 0
         self.num_of_wins = 0
         self.move = move
+        self.chessboard = chessboard
+
 
     # select the best child node using UCT
     def find_best_child_node_by_uct(self):
@@ -103,7 +143,6 @@ class TreeNode:
         return False
 
     def select_best_node(self):
-        # TODO: Maybe not initialize best node to self but just the
         bestNode = self
 
         while not self.is_terminal():
@@ -116,10 +155,10 @@ class TreeNode:
         new_pos = getNextPossibleMove(chess_board, self.pos, adv_pos, )
         new_node = TreeNode(parent_node, )
 
-    def simulation(self, chess_board, max_):
+    def simulation(self, chess_board, max_step):
+        # returns the final board after the game has ended
 
-
-        return
+        return end_state
 
     def get_next_possible_move(chess_board, my_pos, adv_pos, dir, max_step):
         new_pos = generate_random_move(my_pos, max_step)
@@ -136,47 +175,7 @@ class TreeNode:
 
         return ((random_x, random_y), random_dir)
 
-    def random_walk(self, my_pos, adv_pos):
-        """
-        Randomly walk to the next position in the board.
 
-        Parameters
-        ----------
-        my_pos : tuple
-            The position of the agent.
-        adv_pos : tuple
-            The position of the adversary.
-        """
-        ori_pos = deepcopy(my_pos)
-        steps = np.random.randint(0, self.max_step + 1)
-        # Random Walk
-        for _ in range(steps):
-            r, c = my_pos
-            dir = np.random.randint(0, 4)
-            m_r, m_c = self.moves[dir]
-            my_pos = (r + m_r, c + m_c)
-
-            # Special Case enclosed by Adversary
-            k = 0
-            while self.chess_board[r, c, dir] or my_pos == adv_pos:
-                k += 1
-                if k > 300:
-                    break
-                dir = np.random.randint(0, 4)
-                m_r, m_c = self.moves[dir]
-                my_pos = (r + m_r, c + m_c)
-
-            if k > 300:
-                my_pos = ori_pos
-                break
-
-        # Put Barrier
-        dir = np.random.randint(0, 4)
-        r, c = my_pos
-        while self.chess_board[r, c, dir]:
-            dir = np.random.randint(0, 4)
-
-        return my_pos, dir
 
     def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
         """
@@ -223,6 +222,68 @@ class TreeNode:
                 state_queue.append((next_pos, cur_step + 1))
 
         return is_reached
+
+    def check_endgame(self, board_size, my_pos, adv_pos):
+        """
+        Check if the game ends and compute the current score of the agents.
+
+        Returns
+        -------
+        is_endgame : bool
+            Whether the game ends.
+        player_1_score : int
+            The score of player 1.
+        player_2_score : int
+            The score of player 2.
+        """
+        # Union-Find
+        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+        father = dict()
+        for r in range(board_size):
+            for c in range(board_size):
+                father[(r, c)] = (r, c)
+
+        def find(pos):
+            if father[pos] != pos:
+                father[pos] = find(father[pos])
+            return father[pos]
+
+        def union(pos1, pos2):
+            father[pos1] = pos2
+
+        for r in range(board_size):
+            for c in range(board_size):
+                for dir, move in enumerate(
+                        moves[1:3]
+                ):  # Only check down and right
+                    if self.chessboard[r, c, dir + 1]:
+                        continue
+                    pos_a = find((r, c))
+                    pos_b = find((r + move[0], c + move[1]))
+                    if pos_a != pos_b:
+                        union(pos_a, pos_b)
+
+        for r in range(board_size):
+            for c in range(board_size):
+                find((r, c))
+        p0_r = find(tuple(my_pos))
+        p1_r = find(tuple(adv_pos))
+        p0_score = list(father.values()).count(p0_r)
+        p1_score = list(father.values()).count(p1_r)
+        if p0_r == p1_r:
+            return False, p0_score, p1_score
+        player_win = None
+        win_blocks = -1
+        if p0_score > p1_score:
+            player_win = 0
+            win_blocks = p0_score
+        elif p0_score < p1_score:
+            player_win = 1
+            win_blocks = p1_score
+        else:
+            player_win = -1  # Tie
+
+        return True, p0_score, p1_score
 
 
 class BoardState:
