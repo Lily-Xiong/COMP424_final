@@ -86,64 +86,19 @@ class MonteCarloSearchTree():
     def __init__(self, move, parentNode):
         self.rootNode = aNode
 
-    def expand(self, node):
-        # apply default policy, if node is not a terminal node, then expand by one node
-        # dummy return
-        return node
-
-    def simulate(self, node):
-        # simulate game from node
-        return node
-
-    def backpropagation(self):
-        # backpropagate
-        # dummy return
-        return
 
 
 class TreeNode:
-    def __init__(self, move, chessboard, my_pos, adv_pos, parentNode=None):
+    def __init__(self, chessboard, my_pos, adv_pos, parentNode=None):
         self.parent = parentNode
         self.children = []
         self.num_of_visit = 0
         self.num_of_wins = 0
-        self.move = move
         self.chessboard = chessboard
         self.my_pos = my_pos
         self.adv_pos = adv_pos
 
-
-    # select the best child node using UCT
-    def find_best_child_node_by_uct(self):
-        #a function to calculate UCT Value
-        max_child = self.get_max_uct_children()
-        return max_child
-
-    def get_max_uct_children(self):
-
-        # array that stores UCT value for each child of the current node
-        UCT_arr = np.zeros(len(self.children))
-
-        # iterate through the list of children and caluculate the UCT for each
-        for i in range(len(self.children)):
-            UCT_arr[i] = self.children[i].uct
-
-        return self.children[max(UCT_arr)]
-
-    def uct(self):
-        return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
-            math.log(self.parent.num_of_visit) / self.num_of_visit))
-
-    def update_data(self, game_result):
-        self.num_of_visit += 1
-        if game_result == "win":
-            self.num_of_wins += 1
-
-    def is_terminal(self):
-        if len(self.children) == 0:
-            return True
-        return False
-
+   #Select the best node during tree traversal
     def select_best_node(self):
         bestNode = self
 
@@ -152,6 +107,7 @@ class TreeNode:
 
         return bestNode
 
+    #Expand the node by adding one random node as its child
     def expandNode(self, chess_board, max_step, adv_pos):
         parent_node = self
         new_pos = getNextPossibleMove(chess_board, self.pos, adv_pos, )
@@ -174,14 +130,67 @@ class TreeNode:
 
 
         return end_state
+    
+    def backpropagation(self, gameResult):
+        currentNode = self
+        while (currentNode != None):
+            currentNode.update_data(gameResult)
+            currentNode = currentNode.parent
+    
+     # ---- HELPER FUNCTIONS -------
 
-    def get_next_possible_move(chess_board, my_pos, adv_pos, dir, max_step):
+    # select the best child node using UCT
+    def find_best_child_node_by_uct(self):
+        #a function to calculate UCT Value
+        max_child = self.get_max_uct_children()
+        return max_child
+
+    def get_max_uct_children(self):
+
+        # array that stores UCT value for each child of the current node
+        UCT_arr = []
+
+        # iterate through the list of children and caluculate the UCT for each, and 
+        # return the child that has the max UCT value
+        for i in range(len(self.children)):
+            UCT_arr.append(self.children[i].uct)
+
+        max_UCT = max(UCT_arr)
+        max_UCT_index = UCT_arr.index(max_UCT)
+
+        return self.children[max_UCT_index]
+
+    #Calculate the UCT value for a node
+    def uct(self):
+        if self.parent == None:
+            parent_visits = 0
+        else:
+            parent_visits = self.parent.num_of_visit
+        return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
+            math.log(parent_visits) / self.num_of_visit))
+
+    #Update the node's number of visit and win/lose
+    def update_data(self, game_result):
+        self.num_of_visit += 1
+        if game_result == "win":
+            self.num_of_wins += 1
+
+    #Check if a node is terminal
+    def is_terminal(self):
+        if len(self.children) == 0:
+            return True
+        return False
+
+    #Get a possible move from the current node/state of the board 
+    def get_next_possible_move(chess_board, my_pos, adv_pos, max_step):
         new_pos = generate_random_move(my_pos, max_step)
+        ((x,y),dir) = new_pos
         while check_valid_step(chess_board, adv_pos, my_pos, new_pos, dir, max_step) == False:
             new_pos = generate_random_move(my_pos, max_step)
 
         return new_pos
 
+    #Pick a random move that can be made from the current state/ node
     def generate_random_move(self, max_step):
         x, y = self.pos
         random_x = random.randint(x - max_step, x + max_step)
@@ -190,21 +199,8 @@ class TreeNode:
 
         return ((random_x, random_y), random_dir)
 
-
-
+    #Check if the step the agent takes is valid (reachable and within max steps).
     def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
-        """
-        Check if the step the agent takes is valid (reachable and within max steps).
-
-        Parameters
-        ----------
-        start_pos : tuple
-            The start position of the agent.
-        end_pos : np.ndarray
-            The end position of the agent.
-        barrier_dir : int
-            The direction of the barrier.
-        """
         # Endpoint already has barrier or is boarder
         r, c = end_pos
         if chess_board[r, c, barrier_dir]:
@@ -299,11 +295,3 @@ class TreeNode:
             player_win = -1  # Tie
 
         return True, p0_score, p1_score
-
-
-class BoardState:
-    def __init__(self, chess_board, my_pos, adv_pos, max_step):
-        self.board = chess_board
-        self.my_pos = my_pos
-        self.adv_pos = adv_pos
-        self.max_step = max_step
