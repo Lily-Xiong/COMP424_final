@@ -102,13 +102,15 @@ class MonteCarloSearchTree():
 
 
 class TreeNode:
-    def __init__(self, move, chessboard, parentNode=None):
+    def __init__(self, move, chessboard, my_pos, adv_pos, parentNode=None):
         self.parent = parentNode
         self.children = []
         self.num_of_visit = 0
         self.num_of_wins = 0
         self.move = move
         self.chessboard = chessboard
+        self.my_pos = my_pos
+        self.adv_pos = adv_pos
 
 
     # select the best child node using UCT
@@ -155,8 +157,21 @@ class TreeNode:
         new_pos = getNextPossibleMove(chess_board, self.pos, adv_pos, )
         new_node = TreeNode(parent_node, )
 
-    def simulation(self, chess_board, max_step):
+    def simulation(self, max_step, we_first_or_second):
         # returns the final board after the game has ended
+        # if we_first_or_second = 1 we play first
+        # if we_first_or_second = 2 we play second
+        # check end game
+
+        turn = we_first_or_second
+        board_size = len(self.chessboard[0])
+        results_list = self.check_endgame(len(self.chessboard[0]), self.my_pos, self.adv_pos)
+
+        # while game has not ended
+        while not results_list[0]:
+            if turn == 1:
+
+
 
         return end_state
 
