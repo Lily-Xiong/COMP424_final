@@ -183,48 +183,6 @@ class TreeNode:
 
         return ((random_x, random_y), random_dir)
 
-    def random_walk(self, my_pos, adv_pos):
-        """
-        Randomly walk to the next position in the board.
-
-        Parameters
-        ----------
-        my_pos : tuple
-            The position of the agent.
-        adv_pos : tuple
-            The position of the adversary.
-        """
-        ori_pos = deepcopy(my_pos)
-        steps = np.random.randint(0, self.max_step + 1)
-        # Random Walk
-        for _ in range(steps):
-            r, c = my_pos
-            dir = np.random.randint(0, 4)
-            m_r, m_c = self.moves[dir]
-            my_pos = (r + m_r, c + m_c)
-
-            # Special Case enclosed by Adversary
-            k = 0
-            while self.chess_board[r, c, dir] or my_pos == adv_pos:
-                k += 1
-                if k > 300:
-                    break
-                dir = np.random.randint(0, 4)
-                m_r, m_c = self.moves[dir]
-                my_pos = (r + m_r, c + m_c)
-
-            if k > 300:
-                my_pos = ori_pos
-                break
-
-        # Put Barrier
-        dir = np.random.randint(0, 4)
-        r, c = my_pos
-        while self.chess_board[r, c, dir]:
-            dir = np.random.randint(0, 4)
-
-        return my_pos, dir
-
     def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
         """
         Check if the step the agent takes is valid (reachable and within max steps).
