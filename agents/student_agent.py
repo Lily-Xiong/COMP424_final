@@ -81,10 +81,10 @@ class StudentAgent(Agent):
         return my_pos, dir
 
 
-
+#Class representing the tree for Monte Carlo Search
 class MonteCarloSearchTree():
-    def __init__(self, move, parentNode):
-        self.rootNode = aNode
+    def __init__(self, move, rootNode):
+        self.rootNode = rootNode
 
 
 
@@ -137,6 +137,7 @@ class TreeNode:
             currentNode.update_data(gameResult)
             currentNode = currentNode.parent
     
+
      # ---- HELPER FUNCTIONS -------
 
     # select the best child node using UCT
@@ -183,16 +184,17 @@ class TreeNode:
 
     #Get a possible move from the current node/state of the board 
     def get_next_possible_move(chess_board, my_pos, adv_pos, max_step):
-        new_pos = generate_random_move(my_pos, max_step)
-        ((x,y),dir) = new_pos
+        move = generate_random_move(my_pos, max_step)
+        ((x,y),dir) = move
+        new_pos = (x,y)
         while check_valid_step(chess_board, adv_pos, my_pos, new_pos, dir, max_step) == False:
-            new_pos = generate_random_move(my_pos, max_step)
+            move = generate_random_move(my_pos, max_step)
 
-        return new_pos
+        return move
 
     #Pick a random move that can be made from the current state/ node
     def generate_random_move(self, max_step):
-        x, y = self.pos
+        x, y = self.my_pos
         random_x = random.randint(x - max_step, x + max_step)
         random_y = random.randint(x - max_step, x + max_step)
         random_dir = random.randint(0, 3)
