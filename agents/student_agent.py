@@ -6,6 +6,7 @@ import sys
 import math
 import random
 from copy import deepcopy
+import time
 
 
 @register_agent("student_agent")
@@ -43,47 +44,22 @@ class StudentAgent(Agent):
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
         # dummy return
+
+        root_node = TreeNode(chess_board, my_pos, adv_pos)
+
+        SearchTree = MonteCarloSearchTree(root_node)
+
+        # 1. create a new node to represent the current state
+        # 2. Make the new node the root of the tree
+        # 3. select the best child in tree 
+        # 4. when leaf node is reached, if game does not end, expand 
+        # 5. from expanded node, simulate the game, for both our player and adversary. Return game result
+        # 6. backpropagate - updates the visit count and score of the nodes visited during selection and expansion
         return my_pos, self.dir_map["u"]
-
-    def random_move(self, chess_board, my_pos, adv_pos, max_step):
-        # Moves (Up, Right, Down, Left)
-        ori_pos = deepcopy(my_pos)
-        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
-        steps = np.random.randint(0, max_step + 1)
-
-        # Random Walk
-        for _ in range(steps):
-            r, c = my_pos
-            dir = np.random.randint(0, 4)
-            m_r, m_c = moves[dir]
-            my_pos = (r + m_r, c + m_c)
-
-            # Special Case enclosed by Adversary
-            k = 0
-            while chess_board[r, c, dir] or my_pos == adv_pos:
-                k += 1
-                if k > 300:
-                    break
-                dir = np.random.randint(0, 4)
-                m_r, m_c = moves[dir]
-                my_pos = (r + m_r, c + m_c)
-
-            if k > 300:
-                my_pos = ori_pos
-                break
-
-        # Put Barrier
-        dir = np.random.randint(0, 4)
-        r, c = my_pos
-        while chess_board[r, c, dir]:
-            dir = np.random.randint(0, 4)
-
-        return my_pos, dir
-
 
 #Class representing the tree for Monte Carlo Search
 class MonteCarloSearchTree():
-    def __init__(self, move, rootNode):
+    def __init__(self, rootNode):
         self.rootNode = rootNode
 
 
@@ -108,11 +84,16 @@ class TreeNode:
         return bestNode
 
     #Expand the node by adding one random node as its child
-    def expandNode(self, chess_board, max_step, adv_pos):
+    def expandNode(self, max_step):
         parent_node = self
-        new_pos = getNextPossibleMove(chess_board, self.pos, adv_pos, )
-        new_node = TreeNode(parent_node, )
+        new_pos = get_next_possible_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+        new_chess_board = deepcopy(self.chessboard)
+        ((r,c), dir) = new_pos
+        new_chess_board[r, c, dir] = True
+        
+        new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, parent_node)
 
+        self.children.append(new_node)
 
     #Simulate one game from a given node
     def simulation(self, max_step, we_first_or_second):
@@ -128,10 +109,7 @@ class TreeNode:
         # while game has not ended
         while not results_list[0]:
             if turn == 1:
-
-
-
-        return end_state
+                return None 
     
     #Backpropagate on the nodes based on the result of simulation
     def backpropagation(self, gameResult):
@@ -191,18 +169,10 @@ class TreeNode:
         ((x,y),dir) = move
         new_pos = (x,y)
         while check_valid_step(chess_board, adv_pos, my_pos, new_pos, dir, max_step) == False:
-            move = generate_random_move(my_pos, max_step)
+            move = random_move(chess_board, my_pos, adv_pos, max_step)
 
         return move
 
-    #Pick a random move that can be made from the current state/ node
-    def generate_random_move(self, max_step):
-        x, y = self.my_pos
-        random_x = random.randint(x - max_step, x + max_step)
-        random_y = random.randint(x - max_step, x + max_step)
-        random_dir = random.randint(0, 3)
-
-        return ((random_x, random_y), random_dir)
 
     #Check if the step the agent takes is valid (reachable and within max steps).
     def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
@@ -300,3 +270,38 @@ class TreeNode:
             player_win = -1  # Tie
 
         return True, p0_score, p1_score
+
+    def random_move(chess_board, my_pos, adv_pos, max_step):
+        # Moves (Up, Right, Down, Left)
+        ori_pos = deepcopy(my_pos)
+        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+        steps = np.random.randint(0, max_step + 1)
+
+        # Random Walk
+        for _ in range(steps):
+            r, c = my_pos
+            dir = np.random.randint(0, 4)
+            m_r, m_c = moves[dir]
+            my_pos = (r + m_r, c + m_c)
+
+            # Special Case enclosed by Adversary
+            k = 0
+            while chess_board[r, c, dir] or my_pos == adv_pos:
+                k += 1
+                if k > 300:
+                    break
+                dir = np.random.randint(0, 4)
+                m_r, m_c = moves[dir]
+                my_pos = (r + m_r, c + m_c)
+
+            if k > 300:
+                my_pos = ori_pos
+                break
+
+        # Put Barrier
+        dir = np.random.randint(0, 4)
+        r, c = my_pos
+        while chess_board[r, c, dir]:
+            dir = np.random.randint(0, 4)
+
+        return my_pos, dir
