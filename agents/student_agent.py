@@ -222,12 +222,12 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
     # Moves (Up, Right, Down, Left)
     ori_pos = deepcopy(my_pos)
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
-    steps = np.random.randint(0, max_step + 1)
+    steps = random.randint(0, max_step + 1)
 
     # Random Walk
     for _ in range(steps):
         r, c = my_pos
-        dir = np.random.randint(0, 4)
+        dir = random.randint(0, 4)
         m_r, m_c = moves[dir]
         my_pos = (r + m_r, c + m_c)
 
@@ -237,7 +237,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
             k += 1
             if k > 300:
                 break
-            dir = np.random.randint(0, 4)
+            dir = random.randint(0, 4)
             m_r, m_c = moves[dir]
             my_pos = (r + m_r, c + m_c)
 
@@ -246,10 +246,10 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
             break
 
     # Put Barrier
-    dir = np.random.randint(0, 4)
+    dir = random.randint(0, 4)
     r, c = my_pos
     while chess_board[r, c, dir]:
-        dir = np.random.randint(0, 4)
+        dir = random.randint(0, 4)
 
     return my_pos, dir
 
