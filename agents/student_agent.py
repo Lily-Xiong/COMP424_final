@@ -42,9 +42,16 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # dummy return
+        #General Idea for the main algo:
+        
+        # 1. create a new node to represent the current state
+        # 2. Make the new node the root of the tree
+        # 3. select the best child in tree 
+        # 4. when leaf node is reached, if game does not end, expand 
+        # 5. from expanded node, simulate the game, for both our player and adversary. Return game result
+        # 6. backpropagate - updates the visit count and score of the nodes visited during selection and expansion
+        
         return my_pos, self.dir_map["u"]
-
 
 
 
@@ -93,12 +100,21 @@ class TreeNode:
 
         # while game has not ended
         while not results_list[0]:
-            if turn == 1:
-                m = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
-            elif turn == 2:
+            if turn == 0:
+                my_new_pos, my_new_dir = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+                # TODO: need to set barrier
+                turn = 1
+            elif turn == 1:
+                adv_new_pos, adv_new_dir = random_move(self.chessboard, self.adv_pos, self.my_pos, max_step)
+                turn = 0
 
+            results_list = self.check_endgame(len(self.chessboard[0]), self.my_pos, self.adv_pos)
 
-        return final_score
+        #
+        if results_list[2] >= results_list[1]
+
+        return score
+
     
     #Backpropagate on the nodes based on the result of simulation
     def backpropagation(self, gameResult):
@@ -106,7 +122,7 @@ class TreeNode:
         while (currentNode != None):
             currentNode.update_data(gameResult)
             currentNode = currentNode.parent
-    
+
 
      # ---- HELPER FUNCTIONS -------
 
@@ -274,7 +290,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
     steps = np.random.randint(0, max_step + 1)
 
-        # Random Walk
+    # Random Walk
     for _ in range(steps):
         r, c = my_pos
         dir = np.random.randint(0, 4)
@@ -302,3 +318,4 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
         dir = np.random.randint(0, 4)
 
     return my_pos, dir
+
