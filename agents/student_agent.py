@@ -42,7 +42,15 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # dummy return
+        #General Idea for the main algo:
+        
+        # 1. create a new node to represent the current state
+        # 2. Make the new node the root of the tree
+        # 3. select the best child in tree 
+        # 4. when leaf node is reached, if game does not end, expand 
+        # 5. from expanded node, simulate the game, for both our player and adversary. Return game result
+        # 6. backpropagate - updates the visit count and score of the nodes visited during selection and expansion
+        
         return my_pos, self.dir_map["u"]
 
 
