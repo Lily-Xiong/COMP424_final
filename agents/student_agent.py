@@ -36,11 +36,9 @@ class StudentAgent(Agent):
         - my_pos: a tuple of (x, y)
         - adv_pos: a tuple of (x, y)
         - max_step: an integer
-
         You should return a tuple of ((x, y), dir),
         where (x, y) is the next position of your agent and dir is the direction of the wall
         you want to put on.
-
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
         # dummy return
@@ -89,8 +87,10 @@ class TreeNode:
 
     #Expand the node by adding one random node as its child
     def expandNode(self, max_step):
-        parent_node = self
-        new_pos = get_next_possible_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+        parent_node = self 
+
+        #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
+        new_pos = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
         new_chess_board = deepcopy(self.chessboard)
         ((r,c), dir) = new_pos
         new_chess_board[r, c, dir] = True
@@ -204,19 +204,6 @@ class TreeNode:
             return True
         return False
 
-    #Get a possible move from the current node/state of the board 
-    def get_next_possible_move(chess_board, my_pos, adv_pos, max_step):
-        move = generate_random_move(my_pos, max_step)
-        ((x,y),dir) = move
-        new_pos = (x,y)
-        while check_valid_step(chess_board, adv_pos, my_pos, new_pos, dir, max_step) == False:
-            move = random_move(chess_board, my_pos, adv_pos, max_step)
-
-        return move
-
-
-
-
 
 def random_move(chess_board, my_pos, adv_pos, max_step):
     # Moves (Up, Right, Down, Left)
@@ -304,7 +291,6 @@ def set_barrier(chessboard, r, c, dir):
 def check_endgame(chessboard, board_size, my_pos, adv_pos):
     """
     Check if the game ends and compute the current score of the agents.
-
     Returns
     -------
     is_endgame : bool
@@ -362,3 +348,4 @@ def check_endgame(chessboard, board_size, my_pos, adv_pos):
         player_win = -1  # Tie
 
     return True, p0_score, p1_score
+
