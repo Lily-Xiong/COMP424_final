@@ -45,40 +45,6 @@ class StudentAgent(Agent):
         # dummy return
         return my_pos, self.dir_map["u"]
 
-    def random_move(self, chess_board, my_pos, adv_pos, max_step):
-        # Moves (Up, Right, Down, Left)
-        ori_pos = deepcopy(my_pos)
-        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
-        steps = np.random.randint(0, max_step + 1)
-
-        # Random Walk
-        for _ in range(steps):
-            r, c = my_pos
-            dir = np.random.randint(0, 4)
-            m_r, m_c = moves[dir]
-            my_pos = (r + m_r, c + m_c)
-
-            # Special Case enclosed by Adversary
-            k = 0
-            while chess_board[r, c, dir] or my_pos == adv_pos:
-                k += 1
-                if k > 300:
-                    break
-                dir = np.random.randint(0, 4)
-                m_r, m_c = moves[dir]
-                my_pos = (r + m_r, c + m_c)
-
-            if k > 300:
-                my_pos = ori_pos
-                break
-
-        # Put Barrier
-        dir = np.random.randint(0, 4)
-        r, c = my_pos
-        while chess_board[r, c, dir]:
-            dir = np.random.randint(0, 4)
-
-        return my_pos, dir
 
 
 #Class representing the tree for Monte Carlo Search
@@ -126,11 +92,21 @@ class TreeNode:
 
         # while game has not ended
         while not results_list[0]:
-            if turn == 1:
+            if turn == 0:
+                my_new_pos, my_new_dir = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+                # TODO: need to set barrier
+                turn = 1
+            elif turn == 1:
+                adv_new_pos, adv_new_dir = random_move(self.chessboard, self.adv_pos, self.my_pos, max_step)
+                turn = 0
 
+            results_list = self.check_endgame(len(self.chessboard[0]), self.my_pos, self.adv_pos)
 
+        #
+        if results_list[2] >= results_list[1]
 
-        return end_state
+        return score
+
     
     #Backpropagate on the nodes based on the result of simulation
     def backpropagation(self, gameResult):
@@ -138,7 +114,7 @@ class TreeNode:
         while (currentNode != None):
             currentNode.update_data(gameResult)
             currentNode = currentNode.parent
-    
+
 
      # ---- HELPER FUNCTIONS -------
 
@@ -299,3 +275,39 @@ class TreeNode:
             player_win = -1  # Tie
 
         return True, p0_score, p1_score
+
+def random_move(chess_board, my_pos, adv_pos, max_step):
+    # Moves (Up, Right, Down, Left)
+    ori_pos = deepcopy(my_pos)
+    moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+    steps = np.random.randint(0, max_step + 1)
+
+    # Random Walk
+    for _ in range(steps):
+        r, c = my_pos
+        dir = np.random.randint(0, 4)
+        m_r, m_c = moves[dir]
+        my_pos = (r + m_r, c + m_c)
+
+        # Special Case enclosed by Adversary
+        k = 0
+        while chess_board[r, c, dir] or my_pos == adv_pos:
+            k += 1
+            if k > 300:
+                break
+            dir = np.random.randint(0, 4)
+            m_r, m_c = moves[dir]
+            my_pos = (r + m_r, c + m_c)
+
+        if k > 300:
+            my_pos = ori_pos
+            break
+
+    # Put Barrier
+    dir = np.random.randint(0, 4)
+    r, c = my_pos
+    while chess_board[r, c, dir]:
+        dir = np.random.randint(0, 4)
+
+    return my_pos, dir
+
