@@ -27,8 +27,8 @@ class StudentAgent(Agent):
         }
         self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
         self.autoplay = True
-        self.current_move = 0;
-        self.max_time = 0;
+        self.current_move = 0
+        self.max_time = 0
 
     def step(self, chess_board, my_pos, adv_pos, max_step):
         """
@@ -44,30 +44,30 @@ class StudentAgent(Agent):
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
         # dummy return
-        self.current_move += self.currentMove 
+        self.current_move += 1
         start_time = time.time()
         end_time = start_time
 
         if self.current_move == 1: 
             self.max_time = 25
         else: 
-            self.max_time = 2
+            self.max_time = 1.9
 
         #create a MonteCarlo Search Tree
         root_node = TreeNode(chess_board, my_pos, adv_pos)
         SearchTree = MonteCarloSearchTree(root_node)
 
-        while (end_time < self.max_time):
+        while time.time() - start_time < self.max_time:
             selectedNode = root_node.select_best_node()
             selectedNode.expandNode(max_step, self.current_move)
             #NOTE Do we play first here? 
-            random_index = random.randint(0, len(selectedNode.children) - 1 )
+            random_index = random.randint(0, len(selectedNode.children) - 1)
             node_to_simulate = selectedNode.children[random_index]
-            random_game_result = node_to_simulate.simulation(max_step,0)
-            selectedNode.backpropagation
+            random_game_result = node_to_simulate.simulation(max_step, 0)
+            selectedNode.backpropagation(random_game_result)
 
         #pick the best child node
-        best_node = SearchTree.rootNode.get_best_move_by_win_rate
+        best_node = SearchTree.rootNode.get_best_move_by_win_rate()
         position = best_node.my_pos
         direction = best_node.dir_for_cur_state
 
@@ -83,6 +83,7 @@ class StudentAgent(Agent):
         return position, direction
 
 #Class representing the tree for Monte Carlo Search
+# TODO: do we even need this?
 class MonteCarloSearchTree:
     def __init__(self, rootNode):
         self.rootNode = rootNode
@@ -101,15 +102,16 @@ class TreeNode:
 
    #Select the best node during tree traversal
     def select_best_node(self):
-        bestNode = self
+        best_node = self
 
         while not self.is_terminal():
-            bestNode = self.find_best_child_node_by_uct(bestNode)
+            best_node = self.find_best_child_node_by_uct()
 
-        return bestNode
+        return best_node
 
     #Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
+        # TODO: Fix
         parent_node = self 
 
         if current_move == 1:
