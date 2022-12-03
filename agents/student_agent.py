@@ -114,7 +114,9 @@ class TreeNode:
         # TODO: Fix
         parent_node = self 
 
+        #For the first turn, find all the possible moves for the root node.
         if current_move == 1:
+            #moves is an array containing all the possible moves for the node - in the form of ((x,y), dir)
             moves = self.generate_all_next_moves(max_step)
             num_of_moves = len(moves)
             for i in range(num_of_moves):
@@ -229,6 +231,8 @@ class TreeNode:
         return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
             math.log(parent_visits) / self.num_of_visit))
 
+    #Generate all the possible moves from a node
+    #Returns a list of the possible moves, that has the format ((x,y), dir)
     def generate_all_next_moves(self, max_step):
         x , y = self.my_pos
         moves =[]
