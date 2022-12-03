@@ -61,13 +61,13 @@ class StudentAgent(Agent):
             selectedNode = root_node.select_best_node()
             selectedNode.expandNode(max_step, self.current_move)
             #NOTE Do we play first here? 
-            random_index = random.randint(0, len(selectedNode.children) - 1 )
+            random_index = random.randint(0, len(selectedNode.children) - 1)
             node_to_simulate = selectedNode.children[random_index]
-            random_game_result = node_to_simulate.simulation(max_step,0)
-            selectedNode.backpropagation
+            random_game_result = node_to_simulate.simulation(max_step, 0)
+            selectedNode.backpropagation(random_game_result)
 
         #pick the best child node
-        best_node = SearchTree.rootNode.get_best_move_by_win_rate
+        best_node = SearchTree.rootNode.get_best_move_by_win_rate()
         position = best_node.my_pos
         direction = best_node.dir_for_cur_state
 
@@ -102,12 +102,12 @@ class TreeNode:
 
    #Select the best node during tree traversal
     def select_best_node(self):
-        bestNode = self
+        best_node = self
 
         while not self.is_terminal():
-            bestNode = self.find_best_child_node_by_uct()
+            best_node = self.find_best_child_node_by_uct()
 
-        return bestNode
+        return best_node
 
     #Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
