@@ -129,11 +129,12 @@ class TreeNode:
         else:
 
             #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
-            new_pos = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+            new_move = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
             new_chess_board = deepcopy(self.chessboard)
-            ((r,c), dir) = new_pos
-            new_chess_board[r, c, dir] = True
-            
+            ((x,y), dir) = new_move
+
+            new_chess_board[x, y, dir] = True
+            new_pos = (x,y)
             new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, dir, parent_node)
 
             self.children.append(new_node)
