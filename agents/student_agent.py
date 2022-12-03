@@ -251,8 +251,10 @@ class TreeNode:
                 new_pos = (x, y_coord)
                 if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, new_pos, dir, max_step):
                     new_move = (new_pos, dir)
-                    moves.append(new_move) 
-        
+                    moves.append(new_move)
+
+        return moves
+
     #Update the node's number of visit and win/lose
     def update_data(self, game_result):
         self.num_of_visit += 1
@@ -295,10 +297,11 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
     steps = random.randint(0, max_step + 1)
 
+
     # Random Walk
     for _ in range(steps):
         r, c = my_pos
-        dir = random.randint(0, 4)
+        dir = np.random.randint(0, 4)
         m_r, m_c = moves[dir]
         my_pos = (r + m_r, c + m_c)
 
@@ -308,7 +311,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
             k += 1
             if k > 300:
                 break
-            dir = random.randint(0, 4)
+            dir = np.random.randint(0, 4)
             m_r, m_c = moves[dir]
             my_pos = (r + m_r, c + m_c)
 
@@ -317,10 +320,10 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
             break
 
     # Put Barrier
-    dir = random.randint(0, 4)
+    dir = np.random.randint(0, 4)
     r, c = my_pos
     while chess_board[r, c, dir]:
-        dir = random.randint(0, 4)
+        dir = np.random.randint(0, 4)
 
     return my_pos, dir
 
