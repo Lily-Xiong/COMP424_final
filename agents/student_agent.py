@@ -27,6 +27,8 @@ class StudentAgent(Agent):
         }
         self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
         self.autoplay = True
+        self.current_move = 0;
+        self.max_time = 0;
 
     def step(self, chess_board, my_pos, adv_pos, max_step):
         """
@@ -42,10 +44,32 @@ class StudentAgent(Agent):
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
         # dummy return
+        self.current_move += self.currentMove 
+        start_time = time.time()
+        end_time = start_time
 
+        if self.current_move == 1: 
+            self.max_time = 25
+        else: 
+            self.max_time = 2
+
+        #create a MonteCarlo Search Tree
         root_node = TreeNode(chess_board, my_pos, adv_pos)
-
         SearchTree = MonteCarloSearchTree(root_node)
+
+        while (end_time < self.max_time):
+            selectedNode = root_node.select_best_node()
+            selectedNode.expandNode(max_step, self.current_move)
+            #NOTE Do we play first here? 
+            random_index = random.randint(0, len(selectedNode.children) - 1 )
+            node_to_simulate = selectedNode.children[random_index]
+            random_game_result = node_to_simulate.simulation(max_step,0)
+            selectedNode.backpropagation
+
+        #pick the best child node
+        best_node = SearchTree.rootNode.get_best_move_by_win_rate
+        position = best_node.my_pos
+        direction = best_node.dir_for_cur_state
 
         #General Idea for the main algo:
         
@@ -56,18 +80,16 @@ class StudentAgent(Agent):
         # 5. from expanded node, simulate the game, for both our player and adversary. Return game result
         # 6. backpropagate - updates the visit count and score of the nodes visited during selection and expansion
         
-        return my_pos, self.dir_map["u"]
-
+        return position, direction
 
 #Class representing the tree for Monte Carlo Search
-class MonteCarloSearchTree():
+class MonteCarloSearchTree:
     def __init__(self, rootNode):
         self.rootNode = rootNode
 
-
 #Class representing one node in the Monte Carlo Search Tree
 class TreeNode:
-    def __init__(self, chessboard, my_pos, adv_pos, parentNode=None):
+    def __init__(self, chessboard, my_pos, adv_pos, dir_barrier=None, parentNode=None):
         self.parent = parentNode
         self.children = []
         self.num_of_visit = 0
@@ -75,6 +97,7 @@ class TreeNode:
         self.chessboard = chessboard
         self.my_pos = my_pos
         self.adv_pos = adv_pos
+        self.dir_for_cur_state = dir_barrier
 
    #Select the best node during tree traversal
     def select_best_node(self):
@@ -86,18 +109,30 @@ class TreeNode:
         return bestNode
 
     #Expand the node by adding one random node as its child
-    def expandNode(self, max_step):
+    def expandNode(self, max_step, current_move):
         parent_node = self 
 
-        #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
-        new_pos = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
-        new_chess_board = deepcopy(self.chessboard)
-        ((r,c), dir) = new_pos
-        new_chess_board[r, c, dir] = True
-        
-        new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, parent_node)
+        if current_move == 1:
+            moves = self.generate_all_next_moves(max_step)
+            num_of_moves = len(moves)
+            for i in range(num_of_moves):
+                (x_coord, y_coord), direction = moves[i]
+                new_board = deepcopy(self.chessboard)
+                new_board[x_coord, y_coord, direction] = True
+                new_pos = (x_coord, y_coord)
+                node = TreeNode(new_board, new_pos, self.adv_pos, direction, parent_node)
+                self.children.append(node)
+        else:
 
-        self.children.append(new_node)
+            #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
+            new_pos = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
+            new_chess_board = deepcopy(self.chessboard)
+            ((r,c), dir) = new_pos
+            new_chess_board[r, c, dir] = True
+            
+            new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, dir, parent_node)
+
+            self.children.append(new_node)
 
     #Simulate one game from a given node
     def simulation(self, max_step, we_first_or_second):
@@ -160,7 +195,7 @@ class TreeNode:
             currentNode = currentNode.parent
 
 
-     # ---- HELPER FUNCTIONS -------
+     # ---- HELPER FUNCTIONS ------- 
 
     # select the best child node using UCT
     def find_best_child_node_by_uct(self):
@@ -192,6 +227,26 @@ class TreeNode:
         return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
             math.log(parent_visits) / self.num_of_visit))
 
+    def generate_all_next_moves(self, max_step):
+        x , y = self.my_pos
+        moves =[]
+
+        #all moves vertically
+        for x_coord in range(x-max_step,x+1):
+            for dir in range(0,5):
+                new_pos = (x_coord, y)
+                if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, new_pos, dir, max_step):
+                    new_move = (new_pos, dir)
+                    moves.append(new_move)  
+
+        #all moves horizontally
+        for y_coord in range(y-max_step,y+1):
+            for dir in range(0,5):
+                new_pos = (x, y_coord)
+                if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, new_pos, dir, max_step):
+                    new_move = (new_pos, dir)
+                    moves.append(new_move) 
+        
     #Update the node's number of visit and win/lose
     def update_data(self, game_result):
         self.num_of_visit += 1
@@ -204,6 +259,29 @@ class TreeNode:
             return True
         return False
 
+    def is_equal(self, node):
+        if self.my_pos != node.my_pos:
+            return False
+        if self.adv_pos != node.adv_pos:
+            return False
+        if not np.array_equal(self.chessboard, node.chessboard):
+            return False
+        return True
+
+    #get the child that has the highest winning rate
+    def get_best_move_by_win_rate(self):
+        max_win_rate = 0
+        max_win_rate_node = self
+        for i in range(0, len(self.children) - 1):
+            cur_node = self.children[i]
+            win_rate = cur_node.num_of_wins / cur_node.num_of_visits
+            if win_rate > max_win_rate:
+                max_win_rate = win_rate
+                max_win_rate_node = cur_node
+            else: 
+                continue
+        
+        return max_win_rate_node
 
 def random_move(chess_board, my_pos, adv_pos, max_step):
     # Moves (Up, Right, Down, Left)
@@ -242,7 +320,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
 
 #Check if the step the agent takes is valid (reachable and within max steps).
 def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
-    # Endpoint already has barrier or is boarder
+    # Endpoint already has barrier or is boader
     r, c = end_pos
     if chess_board[r, c, barrier_dir]:
         return False
