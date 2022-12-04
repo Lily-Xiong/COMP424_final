@@ -224,7 +224,6 @@ class TreeNode:
         # TODO: FIX MYPOS
         # print(my_pos)
         # print(adv_pos)
-
         # Union-Find
         father = dict()
         for r in range(board_size):
