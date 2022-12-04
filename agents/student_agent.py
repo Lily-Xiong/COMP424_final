@@ -68,16 +68,15 @@ class StudentAgent(Agent):
             
             game_status = selectedNode.check_endgame(selectedNode.chessboard, len(selectedNode.chessboard[0]), selectedNode.my_pos, selectedNode.adv_pos)
             (status, p0, p1) = game_status
-            if status == False: 
-
+            if not status:
                 if selectedNode.num_of_visit == 0:
                     node_to_simulate = selectedNode
                 else:
                     selectedNode.expandNode(max_step, self.current_move)
-                    random_index = random.randint(0,len(selectedNode.children) - 1 )
+                    random_index = random.randint(0,len(selectedNode.children) - 1)
                     node_to_simulate = selectedNode.children[random_index]
 
-                score = random_game_result = node_to_simulate.simulation(max_step)
+                score = node_to_simulate.simulation(max_step)
 
             else:   
                 if p1> p0:
@@ -88,7 +87,7 @@ class StudentAgent(Agent):
                 else:
                     score = 1
 
-            selectedNode.backpropagation(random_game_result)
+            selectedNode.backpropagation(score)
 
         print("Escaped the while loop")
         # pick the best child node
