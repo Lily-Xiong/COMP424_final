@@ -89,14 +89,14 @@ class StudentAgent(Agent):
 
             selectedNode.backpropagation(score)
 
-        print("Escaped the while loop")
+        #print("Escaped the while loop")
         # pick the best child node
         best_node = SearchTree.rootNode.get_best_move_by_win_rate()
-        print("best_node pos", best_node.my_pos)
+        #print("best_node pos", best_node.my_pos)
         position = best_node.my_pos
         direction = best_node.dir_for_cur_state
 
-        print("End of step")
+        #print("End of step")
         return position, direction
 
 
@@ -132,7 +132,7 @@ class TreeNode:
     # Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
 
-        print("GOT HERE")
+        #print("GOT HERE")
         parent_node = self 
         #moves is an array containing all the possible moves for the node - in the form of ((x,y), dir)
         moves = self.generate_all_next_moves(max_step)
@@ -171,7 +171,7 @@ class TreeNode:
         # if we_first_or_second = 1 we play second
         # check end game
         # use copies, so we don't change information for that node
-        print("got to the beginning of simulation")
+        #print("got to the beginning of simulation")
 
         my_pos_copy = deepcopy(self.my_pos)
         # print("simulation--my pos is:", my_pos_copy)
@@ -185,32 +185,37 @@ class TreeNode:
         # TODO check if the position of parameter of mypocopy and advposcopy changes when we first or second changes
         game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy,
                                                             adv_pos_copy)
-        print("game_ended T or F:", game_ended)
+        #print("game_ended T or F:", game_ended)
         # while game has not ended
         while not game_ended:
             if turn == 0:
                 # get new random move
-                print("turn 0 got here 1")
+                #print("turn 0 got here 1")
                 r, c = my_pos_copy
+                #print("turn 0 got here 1.1")
+
                 # TODO check
                 # set barrier on chessboard copy
                 # print("my_new_pos", my_new_pos)
                 # print("my_new_dir", my_new_dir)
                 if chess_board_copy[r, c, 0] and chess_board_copy[r, c, 1] and chess_board_copy[r, c, 2] and chess_board_copy[r, c, 3]:
-                    print("force escape")
+                    #print("force escape")
                     return -1
 
+                #print("turn 0 got here 1.2")
 
                 my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
+                while my_new_dir ==-1:
+                    my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
                 # TODO check
                 # set barrier on chessboard copy
                 # print("my_new_pos", my_new_pos)
                 # print("my_new_dir", my_new_dir)
-                print("turn 0 got here 2")
+                #print("turn 0 got here 2")
 
                 chess_board_copy = set_barrier(chess_board_copy, my_new_pos[0], my_new_pos[1], my_new_dir)
                 # change my position
-                print("turn 0 got here 3")
+                #print("turn 0 got here 3")
 
                 my_pos_copy = my_new_pos
                 # change turn to adv
@@ -218,29 +223,32 @@ class TreeNode:
 
 
             elif turn == 1:
-                print("turn 1 got here 1")
+                #print("turn 1 got here 1")
 
                 r, c = adv_pos_copy
                 if chess_board_copy[r, c, 0] and chess_board_copy[r, c, 1] and chess_board_copy[r, c, 2] and chess_board_copy[r, c, 3]:
-                    print("force escape")
+                    #print("force escape")
                     return 1
 
                 adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
-                print("turn 1 adv new pos", adv_new_pos)
-                print("turn 1 adv_new_dir", adv_new_dir)
+                while adv_new_dir ==-1:
+                    adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
+
+                #print("turn 1 adv new pos", adv_new_pos)
+                #print("turn 1 adv_new_dir", adv_new_dir)
 
                 # TODO check
-                print("turn 1 got here 2")
+                #print("turn 1 got here 2")
 
                 chess_board_copy = set_barrier(chess_board_copy, adv_new_pos[0], adv_new_pos[1], adv_new_dir)
                 adv_pos_copy = adv_new_pos
-                print("turn 1 got here 3")
+                #print("turn 1 got here 3")
                 turn = 0
 
             # check results
             game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
 
-        print("outside of while loop in simulation")
+        #print("outside of while loop in simulation")
 
         # if adv wins return -1
         if p2_score > p1_score:
@@ -413,13 +421,19 @@ class TreeNode:
 
 
 def random_move(chess_board, my_pos, adv_pos, max_step):
+    print("turn 0 random_move got here 1.1")
+
     # Moves (Up, Right, Down, Left)
     ori_pos = deepcopy(my_pos)
+    print("turn 0 random_move got here 1.2")
+
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
     steps = np.random.randint(0, max_step + 1)
 
     # Random Walk
     for _ in range(steps):
+        print("turn 0 random_move got here 1.3")
+
         r, c = my_pos
         dir = np.random.randint(0, 4)
         m_r, m_c = moves[dir]
@@ -429,23 +443,36 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
         k = 0
         while chess_board[r, c, dir] or my_pos == adv_pos:
             k += 1
+            print("k", k)
             if k > 300:
                 break
             dir = np.random.randint(0, 4)
+            print("check 2")
             m_r, m_c = moves[dir]
+            print("check 3")
+
             my_pos = (r + m_r, c + m_c)
+            print("check 5")
 
         if k > 300:
             my_pos = ori_pos
             print("had to use ori pos")
             break
+    print("check 4")
 
     # Put Barrier
     dir = np.random.randint(0, 4)
+
+    print("check 6")
     r, c = my_pos
+    k_2 = 0
     while chess_board[r, c, dir]:
-        # print("stuck check 1")
+        k_2 += 1
+        if k_2 ==30:
+            return (-1, -1), -1
+        print("check 7")
         dir = np.random.randint(0, 4)
+    print("check 8")
 
     return my_pos, dir
 
