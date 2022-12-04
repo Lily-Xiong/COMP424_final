@@ -49,22 +49,23 @@ class StudentAgent(Agent):
         start_time = time.time()
         end_time = start_time
 
-        if self.current_move == 1: 
-            self.max_time = 25
-        else: 
+
+        if self.current_move == 1:
+            self.max_time = 29
+        else:
             self.max_time = 1.9
 
-        #print("step--my pos is:", my_pos)
-        #create a MonteCarlo Search Tree
-        #TODO fix here : 
+        # print("step--my pos is:", my_pos)
+        # create a MonteCarlo Search Tree
+        # TODO fix here :
         root_node = TreeNode(chess_board, my_pos, adv_pos)
         SearchTree = MonteCarloSearchTree(root_node)
 
         while time.time() - start_time < self.max_time:
-            print("Start of while in step")
-            print(time.time() - start_time)
+            # print("Start of while in step")
+            # print(time.time() - start_time)
             selectedNode = root_node.select_best_node()
-
+            
             game_status = self.check_endgame(selectedNode.chessboard, len(selectedNode.chessboard[0]), selectedNode.my_pos, selectedNode.adv_pos)
             (status, p0, p1) = game_status
             if status == False: 
@@ -90,21 +91,24 @@ class StudentAgent(Agent):
             selectedNode.backpropagation(random_game_result)
 
         print("Escaped the while loop")
-        #pick the best child node
+        # pick the best child node
         best_node = SearchTree.rootNode.get_best_move_by_win_rate()
+        print("best_node pos", best_node.my_pos)
         position = best_node.my_pos
         direction = best_node.dir_for_cur_state
 
         print("End of step")
         return position, direction
 
-#Class representing the tree for Monte Carlo Search
+
+# Class representing the tree for Monte Carlo Search
 # TODO: do we even need this?
 class MonteCarloSearchTree:
     def __init__(self, rootNode):
         self.rootNode = rootNode
 
-#Class representing one node in the Monte Carlo Search Tree
+
+# Class representing one node in the Monte Carlo Search Tree
 class TreeNode:
     def __init__(self, chessboard, my_pos, adv_pos, dir_barrier=None, parentNode=None):
         self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
@@ -117,17 +121,16 @@ class TreeNode:
         self.adv_pos = adv_pos
         self.dir_for_cur_state = dir_barrier
 
-   #Select the best node during tree traversal
+    # Select the best node during tree traversal
 
     def select_best_node(self):
         best_node = self
-        
         while not best_node.is_leaf():
             best_node = best_node.find_best_child_node_by_uct()
 
         return best_node
 
-    #Expand the node by adding one random node as its child
+    # Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
 
         print("GOT HERE")
@@ -143,89 +146,106 @@ class TreeNode:
             new_pos = (x_coord, y_coord)
             node = TreeNode(new_board, new_pos, self.adv_pos, direction, parent_node)
             self.children.append(node)
+        
         '''
         else:
         
             #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
+
             new_move = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
             new_chess_board = deepcopy(self.chessboard)
-            ((x,y), dir) = new_move
+            ((x, y), direction) = new_move
 
-            new_chess_board[x, y, dir] = True
-            new_pos = (x,y)
-            new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, dir, parent_node)
+            new_chess_board[x, y, direction] = True
+            new_pos = (x, y)
+            new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, direction, parent_node)
 
             self.children.append(new_node)
 
         print("Got here - end of expand. Children: ", len(self.children))
         '''
 
-    #Simulate one game from a given node
-    def simulation(self, max_step, we_first_or_second):
+    # Simulate one game from a given node
+    def simulation(self, max_step):
         # returns the score after the game has ended
         # if we_first_or_second = 0 we play first
         # if we_first_or_second = 1 we play second
         # check end game
         # use copies, so we don't change information for that node
-        my_pos_copy = self.my_pos
-        #print("simulation--my pos is:", my_pos_copy)
+        print("got to the beginning of simulation")
 
-        adv_pos_copy = self.adv_pos
-        chess_board_copy = self.chessboard
+        my_pos_copy = deepcopy(self.my_pos)
+        # print("simulation--my pos is:", my_pos_copy)
 
-        turn = we_first_or_second
+        adv_pos_copy = deepcopy(self.adv_pos)
+        chess_board_copy = deepcopy(self.chessboard)
+
+        turn = 0
         board_size = len(self.chessboard[0])
         # results[0] p0 score, results[2] p0 score
         # TODO check if the position of parameter of mypocopy and advposcopy changes when we first or second changes
-        results = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
-
+        game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy,
+                                                            adv_pos_copy)
+        print("game_ended T or F:", game_ended)
         # while game has not ended
-        while not results[0]:
+        while not game_ended:
             if turn == 0:
                 # get new random move
-                print("")
+                print("turn 0 got here 1")
                 my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
                 # TODO check
                 # set barrier on chessboard copy
-                #print("my_new_pos", my_new_pos)
-                #print("my_new_dir", my_new_dir)
+                # print("my_new_pos", my_new_pos)
+                # print("my_new_dir", my_new_dir)
+                print("turn 0 got here 2")
 
                 chess_board_copy = set_barrier(chess_board_copy, my_new_pos[0], my_new_pos[1], my_new_dir)
                 # change my position
+                print("turn 0 got here 3")
+
                 my_pos_copy = my_new_pos
                 # change turn to adv
                 turn = 1
 
+
             elif turn == 1:
+                print("turn 1 got here 1")
                 adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
+                print("turn 1 adv new pos", adv_new_pos)
+                print("turn 1 adv_new_dir", adv_new_dir)
+
                 # TODO check
+                print("turn 1 got here 2")
+
                 chess_board_copy = set_barrier(chess_board_copy, adv_new_pos[0], adv_new_pos[1], adv_new_dir)
                 adv_pos_copy = adv_new_pos
+                print("turn 1 got here 3")
+                turn = 0
 
             # check results
-            results = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
+            game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
+
+        print("outside of while loop in simulation")
 
         # if adv wins return -1
-        if results[2] > results[1]:
+        if p2_score > p1_score:
             score = -1
 
-        elif results[1] == results[1]:
+        elif p1_score == p2_score:
             score = 0
-
         else:
             score = 1
-        
         return score
-    
-    #Backpropagate on the nodes based on the result of simulation
+
+    # Backpropagate on the nodes based on the result of simulation
     def backpropagation(self, gameResult):
         currentNode = self
         while (currentNode != None):
             currentNode.update_data(gameResult)
             currentNode = currentNode.parent
+        print("got to the end of backpropagation")
 
-
-     # ---- HELPER FUNCTIONS ------- 
+    # ---- HELPER FUNCTIONS -------
     def check_endgame(self, chessboard, board_size, my_pos, adv_pos):
         """
         Check if the game ends and compute the current score of the agents.
@@ -259,7 +279,7 @@ class TreeNode:
         for r in range(board_size):
             for c in range(board_size):
                 for dir, move in enumerate(
-                    self.moves[1:3]
+                        self.moves[1:3]
                 ):  # Only check down and right
                     if chessboard[r, c, dir + 1]:
                         continue
@@ -291,7 +311,7 @@ class TreeNode:
 
     # select the best child node using UCT
     def find_best_child_node_by_uct(self):
-        #a function to calculate UCT Value
+        # a function to calculate UCT Value
         max_child = self.get_max_uct_children()
         return max_child
 
@@ -311,7 +331,7 @@ class TreeNode:
 
         return self.children[max_UCT_index]
 
-    #Calculate the UCT value for a node
+    # Calculate the UCT value for a node
     def uct(self):
         if self.num_of_visit == 0:
             return float('inf')
@@ -320,10 +340,10 @@ class TreeNode:
         return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
             math.log(parent_visits) / self.num_of_visit))
 
-    #Generate all the possible moves from a node
-    #Returns a list of the possible moves, that has the format ((x,y), dir)
+    # Generate all the possible moves from a node
+    # Returns a list of the possible moves, that has the format ((x,y), dir)
     def generate_all_next_moves(self, max_step):
-        #TODO there might be errors
+        # TODO there might be errors
         x, y = self.my_pos
         moves = []
         for row_coordinate in range(max(0, x - max_step), min(len(self.chessboard[0]), x + max_step)):
@@ -333,19 +353,20 @@ class TreeNode:
                 total_distance_moved = distance_horizontally + distance_vertically
                 # if total distance is in range, iterate through all the keys
                 if total_distance_moved in range(0, max_step + 1):
+
                     for dir in range(0,4):
                         if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
                             moves.append(((row_coordinate, col_coordinate), dir))
 
         return moves
 
-    #Update the node's number of visit and win/lose
+    # Update the node's number of visit and win/lose
     def update_data(self, game_result):
         self.num_of_visit += 1
         if game_result == 1:
             self.num_of_wins += 1
 
-    #Check if a node is leaf node
+    # Check if a node is leaf node
     def is_leaf(self):
         if len(self.children) == 0:
             return True
@@ -360,27 +381,27 @@ class TreeNode:
             return False
         return True
 
-    #get the child that has the highest winning rate
+    # get the child that has the highest winning rate
     def get_best_move_by_win_rate(self):
         max_win_rate = 0
-        max_win_rate_node = self
-        for i in range(0, len(self.children) - 1):
+        max_win_rate_node = self.children[0]
+        for i in range(0, len(self.children)):
             cur_node = self.children[i]
             win_rate = cur_node.num_of_wins / cur_node.num_of_visits
             if win_rate > max_win_rate:
                 max_win_rate = win_rate
                 max_win_rate_node = cur_node
-            else: 
+            else:
                 continue
-        
+
         return max_win_rate_node
+
 
 def random_move(chess_board, my_pos, adv_pos, max_step):
     # Moves (Up, Right, Down, Left)
     ori_pos = deepcopy(my_pos)
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
-    steps = random.randint(0, max_step + 1)
-
+    steps = np.random.randint(0, max_step + 1)
 
     # Random Walk
     for _ in range(steps):
@@ -401,20 +422,23 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
 
         if k > 300:
             my_pos = ori_pos
+            print("had to use ori pos")
             break
 
     # Put Barrier
     dir = np.random.randint(0, 4)
     r, c = my_pos
     while chess_board[r, c, dir]:
+        # print("stuck check 1")
         dir = np.random.randint(0, 4)
 
     return my_pos, dir
 
-#Check if the step the agent takes is valid (reachable and within max steps).
+
+# Check if the step the agent takes is valid (reachable and within max steps).
 def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
     # Endpoint already has barrier or is boarder
-    #print("start pos", start_pos)
+    # print("start pos", start_pos)
     r, c = end_pos
     if chess_board[r, c, barrier_dir]:
         return False
@@ -427,9 +451,9 @@ def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_
     is_reached = False
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
     while state_queue and not is_reached:
-        #print("got here!!!")
+        # print("got here!!!")
         cur_pos, cur_step = state_queue.pop(0)
-        #print("cus_pos", cur_pos)
+        # print("cus_pos", cur_pos)
         r, c = cur_pos
         if cur_step == max_step:
             break
@@ -522,4 +546,3 @@ def check_endgame1(chessboard, board_size, my_pos, adv_pos):
         player_win = -1  # Tie
 
     return True, p0_score, p1_score
-
