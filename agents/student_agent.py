@@ -329,7 +329,7 @@ class TreeNode:
     #Generate all the possible moves from a node
     #Returns a list of the possible moves, that has the format ((x,y), dir)
     def generate_all_next_moves(self, max_step):
-       #TODO there might be errors
+        #TODO there might be errors
         x, y = self.my_pos
         moves = []
         for row_coordinate in range(max(0, x - max_step), min(len(self.chessboard[0]), x + max_step)):
@@ -341,7 +341,8 @@ class TreeNode:
                 if total_distance_moved in range(0, max_step + 1):
                     for dir in range(0,4):
                         if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
-                            moves.append(((row_coordinate, col_coordinate), dir))
+                            moves.append((row_coordinate, col_coordinate, dir))
+
 
         return moves
 
@@ -419,7 +420,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
 
 #Check if the step the agent takes is valid (reachable and within max steps).
 def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
-    # Endpoint already has barrier or is boader
+    # Endpoint already has barrier or is boarder
     #print("start pos", start_pos)
     r, c = end_pos
     if chess_board[r, c, barrier_dir]:
