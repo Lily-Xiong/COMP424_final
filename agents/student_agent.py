@@ -314,7 +314,7 @@ class TreeNode:
                 # if total distance is in range, iterate through all the keys
                 if total_distance_moved in range(0, max_step + 1):
                     for dir in range(0,4):
-                        if self.check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
+                        if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
                             moves.append((row_coordinate, col_coordinate, dir))
         return moves
 
