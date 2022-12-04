@@ -188,10 +188,9 @@ class TreeNode:
         # TODO check if the position of parameter of mypocopy and advposcopy changes when we first or second changes
         game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy,
                                                             adv_pos_copy)
-
+        print("game_ended T or F:", game_ended)
         # while game has not ended
         while not game_ended:
-            print("game_ended T or F:", game_ended)
             if turn == 0:
                 # get new random move
                 print("turn 0 got here 1")
@@ -210,9 +209,9 @@ class TreeNode:
                 # change turn to adv
                 turn = 1
 
+
             elif turn == 1:
                 print("turn 1 got here 1")
-
                 adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
                 print("turn 1 adv new pos", adv_new_pos)
                 print("turn 1 adv_new_dir", adv_new_dir)
@@ -223,19 +222,19 @@ class TreeNode:
                 chess_board_copy = set_barrier(chess_board_copy, adv_new_pos[0], adv_new_pos[1], adv_new_dir)
                 adv_pos_copy = adv_new_pos
                 print("turn 1 got here 3")
+                turn = 0
 
             # check results
-            results = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
+            game_ended, p1_score, p2_score = self.check_endgame(chess_board_copy, len(self.chessboard[0]), my_pos_copy, adv_pos_copy)
 
         print("outside of while loop in simulation")
 
         # if adv wins return -1
-        if results[2] > results[1]:
+        if p2_score > p1_score:
             score = -1
 
-        elif results[1] == results[1]:
+        elif p1_score == p2_score:
             score = 0
-
         else:
             score = 1
 
