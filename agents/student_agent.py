@@ -366,7 +366,7 @@ class TreeNode:
         max_win_rate_node = self
         for i in range(0, len(self.children) - 1):
             cur_node = self.children[i]
-            win_rate = cur_node.num_of_wins / cur_node.num_of_visits
+            win_rate = cur_node.num_of_wins / cur_node.num_of_visit
             if win_rate > max_win_rate:
                 max_win_rate = win_rate
                 max_win_rate_node = cur_node
