@@ -192,6 +192,16 @@ class TreeNode:
             if turn == 0:
                 # get new random move
                 print("turn 0 got here 1")
+                r, c = my_pos_copy
+                # TODO check
+                # set barrier on chessboard copy
+                # print("my_new_pos", my_new_pos)
+                # print("my_new_dir", my_new_dir)
+                if chess_board_copy[r, c, 0] and chess_board_copy[r, c, 1] and chess_board_copy[r, c, 2] and chess_board_copy[r, c, 3]:
+                    print("force escape")
+                    return -1
+
+
                 my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
                 # TODO check
                 # set barrier on chessboard copy
@@ -210,6 +220,12 @@ class TreeNode:
 
             elif turn == 1:
                 print("turn 1 got here 1")
+
+                r, c = adv_pos_copy
+                if chess_board_copy[r, c, 0] and chess_board_copy[r, c, 1] and chess_board_copy[r, c, 2] and chess_board_copy[r, c, 3]:
+                    print("force escape")
+                    return 1
+
                 adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
                 print("turn 1 adv new pos", adv_new_pos)
                 print("turn 1 adv_new_dir", adv_new_dir)
