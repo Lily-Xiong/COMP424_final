@@ -66,7 +66,7 @@ class StudentAgent(Agent):
             # print(time.time() - start_time)
             selectedNode = root_node.select_best_node()
             
-            game_status = self.check_endgame(selectedNode.chessboard, len(selectedNode.chessboard[0]), selectedNode.my_pos, selectedNode.adv_pos)
+            game_status = selectedNode.check_endgame(selectedNode.chessboard, len(selectedNode.chessboard[0]), selectedNode.my_pos, selectedNode.adv_pos)
             (status, p0, p1) = game_status
             if status == False: 
 
@@ -77,7 +77,7 @@ class StudentAgent(Agent):
                     random_index = random.randint(0,len(selectedNode.children) - 1 )
                     node_to_simulate = selectedNode.children[random_index]
 
-                score = random_game_result = node_to_simulate.simulation(max_step, 0)
+                score = random_game_result = node_to_simulate.simulation(max_step)
 
             else:   
                 if p1> p0:
