@@ -319,24 +319,18 @@ class TreeNode:
     #Returns a list of the possible moves, that has the format ((x,y), dir)
     def generate_all_next_moves(self, max_step):
         #TODO there might be errors
-        x , y = self.my_pos
-        moves =[]
-
-        #all moves vertically
-        for x_coord in range(x-max_step,x+1):
-            for dir in range(0,4):
-                new_pos = (x_coord, y)
-                if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, new_pos, dir, max_step):
-                    new_move = (new_pos, dir)
-                    moves.append(new_move)  
-
-        #all moves horizontally
-        for y_coord in range(y-max_step,y+1):
-            for dir in range(0,4):
-                new_pos = (x, y_coord)
-                if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, new_pos, dir, max_step):
-                    new_move = (new_pos, dir)
-                    moves.append(new_move)
+        x, y = self.my_pos
+        moves = []
+        for row_coordinate in range(max(0, x - max_step), min(len(self.chessboard[0]), x + max_step)):
+            for col_coordinate in range(max(0, y - max_step), min(len(self.chessboard[0]), y + max_step)):
+                distance_vertically = abs(x - row_coordinate)
+                distance_horizontally = abs(y - col_coordinate)
+                total_distance_moved = distance_horizontally + distance_vertically
+                # if total distance is in range, iterate through all the keys
+                if total_distance_moved in range(0, max_step + 1):
+                    for dir in range(0,4):
+                        if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
+                            moves.append((row_coordinate, col_coordinate, dir))
 
         return moves
 
@@ -414,7 +408,7 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
 
 #Check if the step the agent takes is valid (reachable and within max steps).
 def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_step):
-    # Endpoint already has barrier or is boader
+    # Endpoint already has barrier or is boarder
     #print("start pos", start_pos)
     r, c = end_pos
     if chess_board[r, c, barrier_dir]:
@@ -448,6 +442,7 @@ def check_valid_step(chess_board, adv_pos, start_pos, end_pos, barrier_dir, max_
             visited.add(tuple(next_pos))
             state_queue.append((next_pos, cur_step + 1))
     print("got here!")
+    print("is_reached", is_reached)
     return is_reached
 
 
