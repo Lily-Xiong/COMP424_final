@@ -55,14 +55,18 @@ class StudentAgent(Agent):
 
         #print("step--my pos is:", my_pos)
         #create a MonteCarlo Search Tree
+        #TODO fix here : 
         root_node = TreeNode(chess_board, my_pos, adv_pos)
         SearchTree = MonteCarloSearchTree(root_node)
 
         while time.time() - start_time < self.max_time:
             selectedNode = root_node.select_best_node()
+
             selectedNode.expandNode(max_step, self.current_move)
             #NOTE Do we play first here? 
-            random_index = random.randint(0, len(selectedNode.children) - 1)
+            num_of_child = len(selectedNode.children)
+            random_index = random.randint(0, num_of_child)
+            
             node_to_simulate = selectedNode.children[random_index]
             random_game_result = node_to_simulate.simulation(max_step, 0)
             selectedNode.backpropagation(random_game_result)
@@ -103,18 +107,28 @@ class TreeNode:
         self.dir_for_cur_state = dir_barrier
 
    #Select the best node during tree traversal
+
     def select_best_node(self):
         best_node = self
 
-        while not self.is_terminal():
+        while not best_node.is_leaf():
             best_node = self.find_best_child_node_by_uct()
+            self = best_node
 
         return best_node
 
     #Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
         # TODO: Fix
+
         parent_node = self 
+
+        #if node ends the game, return 
+        game_status = self.check_endgame(self.chessboard, len(self.chessboard[0]), self.my_pos, self.adv_pos)
+        (status, p0, p1) = game_status
+        if game_status: 
+            return
+
         #For the first turn, find all the possible moves for the root node.
         if current_move == 1:
             #moves is an array containing all the possible moves for the node - in the form of ((x,y), dir)
@@ -279,22 +293,23 @@ class TreeNode:
     def get_max_uct_children(self):
 
         # array that stores UCT value for each child of the current node
-        UCT_arr = []
-
+        max_UCT = 0
+        max_UCT_index = 0
         # iterate through the list of children and calculate the UCT for each, and
         # return the child that has the max UCT value
         for i in range(len(self.children)):
-            UCT_arr.append(self.children[i].uct)
-
-        max_UCT = max(UCT_arr)
-        max_UCT_index = UCT_arr.index(max_UCT)
+            cur_node = self.children[i]
+            cur_UCT = cur_node.uct()
+            if cur_UCT > max_UCT:
+                max_UCT = cur_UCT
+                max_UCT_index = i
 
         return self.children[max_UCT_index]
 
     #Calculate the UCT value for a node
     def uct(self):
         if self.parent == None:
-            parent_visits = 0
+            return 
         else:
             parent_visits = self.parent.num_of_visit
         return (self.num_of_wins / self.num_of_visit) + math.sqrt(2) * (math.sqrt(
@@ -316,6 +331,7 @@ class TreeNode:
                     for dir in range(0,4):
                         if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
                             moves.append((row_coordinate, col_coordinate, dir))
+
         return moves
 
     #Update the node's number of visit and win/lose
@@ -324,8 +340,8 @@ class TreeNode:
         if game_result == "win":
             self.num_of_wins += 1
 
-    #Check if a node is terminal
-    def is_terminal(self):
+    #Check if a node is leaf node
+    def is_leaf(self):
         if len(self.children) == 0:
             return True
         return False
