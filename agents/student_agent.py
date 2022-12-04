@@ -304,6 +304,7 @@ class TreeNode:
     #Generate all the possible moves from a node
     #Returns a list of the possible moves, that has the format ((x,y), dir)
     def generate_all_next_moves(self, max_step):
+        #TODO there might be errors
         x , y = self.my_pos
         moves =[]
 
