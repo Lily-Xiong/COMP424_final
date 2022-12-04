@@ -14,6 +14,7 @@ class StudentAgent(Agent):
     """
     A dummy class for your implementation. Feel free to use this class to
     add any helper functionalities needed for your agent.
+    
     """
 
     def __init__(self):
@@ -49,7 +50,7 @@ class StudentAgent(Agent):
         end_time = start_time
 
         if self.current_move == 1: 
-            self.max_time = 30
+            self.max_time = 25
         else: 
             self.max_time = 1.9
 
@@ -64,19 +65,29 @@ class StudentAgent(Agent):
             print(time.time() - start_time)
             selectedNode = root_node.select_best_node()
 
-            selectedNode.expandNode(max_step, self.current_move)
-            
-            num_of_child = len(selectedNode.children)
-            if num_of_child == 0:
-                i = 0
-            else: 
-                i = num_of_child - 1
-            random_index = random.randint(0, i)
-            
-            node_to_simulate = selectedNode.children[random_index]
-            random_game_result = node_to_simulate.simulation(max_step, 0)
+            game_status = self.check_endgame(selectedNode.chessboard, len(selectedNode.chessboard[0]), selectedNode.my_pos, selectedNode.adv_pos)
+            (status, p0, p1) = game_status
+            if status == False: 
+
+                if selectedNode.num_of_visit == 0:
+                    node_to_simulate = selectedNode
+                else:
+                    selectedNode.expandNode(max_step, self.current_move)
+                    random_index = random.randint(0,len(selectedNode.children) - 1 )
+                    node_to_simulate = selectedNode.children[random_index]
+
+                score = random_game_result = node_to_simulate.simulation(max_step, 0)
+
+            else:   
+                if p1> p0:
+                    score = -1
+
+                elif p0 == p1:
+                    score = 0
+                else:
+                    score = 1
+
             selectedNode.backpropagation(random_game_result)
-            print("End of while loop")
 
         print("Escaped the while loop")
         #pick the best child node
@@ -84,14 +95,6 @@ class StudentAgent(Agent):
         position = best_node.my_pos
         direction = best_node.dir_for_cur_state
 
-        #General Idea for the main algo:
-        
-        # 1. create a new node to represent the current state
-        # 2. Make the new node the root of the tree
-        # 3. select the best child in tree 
-        # 4. when leaf node is reached, if game does not end, expand 
-        # 5. from expanded node, simulate the game, for both our player and adversary. Return game result
-        # 6. backpropagate - updates the visit count and score of the nodes visited during selection and expansion
         print("End of step")
         return position, direction
 
@@ -120,40 +123,29 @@ class TreeNode:
         best_node = self
         
         while not best_node.is_leaf():
-            best_node = self.find_best_child_node_by_uct()
-            self = best_node
+            best_node = best_node.find_best_child_node_by_uct()
 
         return best_node
 
     #Expand the node by adding one random node as its child
     def expandNode(self, max_step, current_move):
+
         print("GOT HERE")
         parent_node = self 
-
-        #if node ends the game, return 
-        game_status = self.check_endgame(self.chessboard, len(self.chessboard[0]), self.my_pos, self.adv_pos)
-        (status, p0, p1) = game_status
-        if status: 
-            print("Got here 1")
-            return
-
-        #For the first turn, find all the possible moves for the root node.
-        if current_move == 1:
-            print("Got here 1")
-            #moves is an array containing all the possible moves for the node - in the form of ((x,y), dir)
-            moves = self.generate_all_next_moves(max_step)
-            print("Got here 3")
-            num_of_moves = len(moves)
-            for i in range(num_of_moves):
-                print("Got here 4")
-                (x_coord, y_coord), direction = moves[i]
-                new_board = deepcopy(self.chessboard)
-                new_board[x_coord, y_coord, direction] = True
-                new_pos = (x_coord, y_coord)
-                node = TreeNode(new_board, new_pos, self.adv_pos, direction, parent_node)
-                self.children.append(node)
+        #moves is an array containing all the possible moves for the node - in the form of ((x,y), dir)
+        moves = self.generate_all_next_moves(max_step)
+        
+        num_of_moves = len(moves)
+        for i in range(num_of_moves):
+            (x_coord, y_coord), direction = moves[i]
+            new_board = deepcopy(self.chessboard)
+            new_board[x_coord, y_coord, direction] = True
+            new_pos = (x_coord, y_coord)
+            node = TreeNode(new_board, new_pos, self.adv_pos, direction, parent_node)
+            self.children.append(node)
+        '''
         else:
-            print("Got here 2")
+        
             #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
             new_move = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
             new_chess_board = deepcopy(self.chessboard)
@@ -164,7 +156,9 @@ class TreeNode:
             new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, dir, parent_node)
 
             self.children.append(new_node)
-        print("Got here - end of expand")
+
+        print("Got here - end of expand. Children: ", len(self.children))
+        '''
 
     #Simulate one game from a given node
     def simulation(self, max_step, we_first_or_second):
@@ -220,7 +214,7 @@ class TreeNode:
 
         else:
             score = 1
-
+        
         return score
     
     #Backpropagate on the nodes based on the result of simulation
@@ -341,15 +335,14 @@ class TreeNode:
                 if total_distance_moved in range(0, max_step + 1):
                     for dir in range(0,4):
                         if check_valid_step(self.chessboard, self.adv_pos, self.my_pos, (row_coordinate, col_coordinate), dir, max_step):
-                            moves.append((row_coordinate, col_coordinate, dir))
-
+                            moves.append(((row_coordinate, col_coordinate), dir))
 
         return moves
 
     #Update the node's number of visit and win/lose
     def update_data(self, game_result):
         self.num_of_visit += 1
-        if game_result == "win":
+        if game_result == 1:
             self.num_of_wins += 1
 
     #Check if a node is leaf node
