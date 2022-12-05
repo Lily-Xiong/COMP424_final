@@ -44,7 +44,6 @@ class StudentAgent(Agent):
         you want to put on.
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # dummy return
         self.current_move += 1
         start_time = time.time()
         end_time = start_time
@@ -53,15 +52,15 @@ class StudentAgent(Agent):
         if self.current_move == 1:
             self.max_time = 29
         else:
-            self.max_time = 1.9
+            self.max_time = 1.95
 
-        # print("step--my pos is:", my_pos)
         # create a MonteCarlo Search Tree
-        # TODO fix here :
         root_node = TreeNode(chess_board, my_pos, adv_pos)
         SearchTree = MonteCarloSearchTree(root_node)
 
-        while time.time() - start_time < self.max_time:
+        while (time.time() - start_time) < self.max_time:
+            
+            print("Time: ", (time.time() - start_time), ", move = ", self.current_move)
             # print("Start of while in step")
             # print(time.time() - start_time)
             selectedNode = root_node.select_best_node()
@@ -73,8 +72,9 @@ class StudentAgent(Agent):
                     node_to_simulate = selectedNode
                 else:
                     selectedNode.expandNode(max_step, self.current_move)
-                    random_index = random.randint(0,len(selectedNode.children) - 1)
-                    node_to_simulate = selectedNode.children[random_index]
+                    if len(selectedNode.children) > 0:
+                        random_index = random.randint(0,len(selectedNode.children) - 1)
+                        node_to_simulate = selectedNode.children[random_index]
 
                 score = node_to_simulate.simulation(max_step)
 
@@ -100,16 +100,26 @@ class StudentAgent(Agent):
         return position, direction
 
 
-# Class representing the tree for Monte Carlo Search
-# TODO: do we even need this?
 class MonteCarloSearchTree:
+    '''
+        Class to represent a the Monte Carlo Search Tree
+
+    '''
     def __init__(self, rootNode):
         self.rootNode = rootNode
 
 
 # Class representing one node in the Monte Carlo Search Tree
 class TreeNode:
+    '''
+        Class to represent a node in the Monte Carlo Search Tree
+
+    '''
     def __init__(self, chessboard, my_pos, adv_pos, dir_barrier=None, parentNode=None):
+
+        '''
+            The class has the following attributes: 
+        '''
         self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
         self.parent = parentNode
         self.children = []
@@ -145,24 +155,6 @@ class TreeNode:
             new_pos = (x_coord, y_coord)
             node = TreeNode(new_board, new_pos, self.adv_pos, direction, parent_node)
             self.children.append(node)
-        
-        '''
-        else:
-        
-            #NOTE: if we create a new strategy to select Node, create a new function to replace random_move
-
-            new_move = random_move(self.chessboard, self.my_pos, self.adv_pos, max_step)
-            new_chess_board = deepcopy(self.chessboard)
-            ((x, y), direction) = new_move
-
-            new_chess_board[x, y, direction] = True
-            new_pos = (x, y)
-            new_node = TreeNode(new_chess_board, new_pos, self.adv_pos, direction, parent_node)
-
-            self.children.append(new_node)
-
-        print("Got here - end of expand. Children: ", len(self.children))
-        '''
 
     # Simulate one game from a given node
     def simulation(self, max_step):
@@ -266,7 +258,6 @@ class TreeNode:
         while (currentNode != None):
             currentNode.update_data(gameResult)
             currentNode = currentNode.parent
-        print("got to the end of backpropagation")
 
     # ---- HELPER FUNCTIONS -------
     def check_endgame(self, chessboard, board_size, my_pos, adv_pos):
@@ -421,18 +412,15 @@ class TreeNode:
 
 
 def random_move(chess_board, my_pos, adv_pos, max_step):
-    print("turn 0 random_move got here 1.1")
 
     # Moves (Up, Right, Down, Left)
     ori_pos = deepcopy(my_pos)
-    print("turn 0 random_move got here 1.2")
 
     moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
     steps = np.random.randint(0, max_step + 1)
 
     # Random Walk
     for _ in range(steps):
-        print("turn 0 random_move got here 1.3")
 
         r, c = my_pos
         dir = np.random.randint(0, 4)
@@ -443,36 +431,25 @@ def random_move(chess_board, my_pos, adv_pos, max_step):
         k = 0
         while chess_board[r, c, dir] or my_pos == adv_pos:
             k += 1
-            print("k", k)
+
             if k > 300:
                 break
             dir = np.random.randint(0, 4)
-            print("check 2")
             m_r, m_c = moves[dir]
-            print("check 3")
-
             my_pos = (r + m_r, c + m_c)
-            print("check 5")
-
         if k > 300:
             my_pos = ori_pos
-            print("had to use ori pos")
             break
-    print("check 4")
 
     # Put Barrier
     dir = np.random.randint(0, 4)
-
-    print("check 6")
     r, c = my_pos
     k_2 = 0
     while chess_board[r, c, dir]:
         k_2 += 1
         if k_2 ==30:
             return (-1, -1), -1
-        print("check 7")
         dir = np.random.randint(0, 4)
-    print("check 8")
 
     return my_pos, dir
 
