@@ -201,6 +201,7 @@ class TreeNode:
 
                 my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
                 while my_new_dir == -1:
+                    #print("had to get here")
                     my_new_pos, my_new_dir = random_move(chess_board_copy, my_pos_copy, adv_pos_copy, max_step)
                 # TODO check
                 # set barrier on chessboard copy
@@ -228,6 +229,7 @@ class TreeNode:
 
                 adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
                 while adv_new_dir == -1:
+                    #print("had to get here")
                     adv_new_pos, adv_new_dir = random_move(chess_board_copy, adv_pos_copy, my_pos_copy, max_step)
 
                 # print("turn 1 adv new pos", adv_new_pos)
@@ -376,9 +378,7 @@ class TreeNode:
                     for dir in range(0, 4):
                         if check_valid_step(self.chessboard, self.adv_pos, self.my_pos,
                                             (row_coordinate, col_coordinate), dir, max_step):
-                            move = ((row_coordinate, col_coordinate), dir)
-                            if not avoid_trapped_squares(self.chessboard, move):
-                                moves.append(((row_coordinate, col_coordinate), dir))
+                            moves.append(((row_coordinate, col_coordinate), dir))
 
         return moves
 
